@@ -1,0 +1,20 @@
+with 
+member [Measures].[Parent] as
+	iif(
+		[Product].[Products].CurrentMember.Properties('Level_Number', TYPED) = 0, "N/A",
+		[Product].[Products].CurrentMember.Parent.Properties('Name')
+		)
+
+member [Measures].[Pct of Parent] as
+	iif(
+		[Product].[Products].CurrentMember.Parent.Properties('Level_Number', TYPED) = 0,
+		"N/A",
+		[Measures].[Sales Amount] /
+		([Measures].[Sales Amount],[Product].[Products].CURRENTMEMBER.Parent)
+	)
+	,Format_string="Percent"
+select 
+	{Measures.[Parent],[Measures].[Sales Amount], [Measures].[Pct of Parent]} on 0,
+	[Product].[Products].AllMembers	
+	on 1
+from ResellerSales
