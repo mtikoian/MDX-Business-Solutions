@@ -1,0 +1,83 @@
+/* SAMPLE OUTPUT
+						Reseller Sales Amount	ABC Class
+All						$80,450,596.98			(null)
+Mountain-200 Black, 38	$1,634,647.94			A - 20%
+Mountain-200 Black, 38	$1,471,078.72			A - 20%
+Road-350-W Yellow, 48	$1,380,253.88			A - 20%
+Touring-1000 Blue, 60	$1,370,784.22			A - 20%
+Mountain-200 Black, 42	$1,360,828.02			A - 20%
+Mountain-200 Black, 42	$1,285,524.65			A - 20%
+Road-350-W Yellow, 40	$1,238,754.64			A - 20%
+Touring-1000 Yellow, 60	$1,184,363.30			A - 20%
+Mountain-200 Silver, 38	$1,181,945.82			A - 20%
+Mountain-200 Silver, 42	$1,175,932.52			A - 20%
+Mountain-100 Black, 38	$1,174,622.74			A - 20%
+Mountain-200 Silver, 38	$1,172,269.42			A - 20%
+Touring-1000 Blue, 46	$1,164,973.18			A - 20%
+Mountain-100 Black, 44	$1,163,352.98			B - 50%
+Mountain-200 Silver, 46	$1,157,224.28			B - 50%
+*/
+
+//Perform ABC Classification with Products against Reseller Sales Amount
+WITH
+set [A - 20%] AS 
+TopPercent(
+	NONEMPTY(
+		[Product].[Products].[Product].Members
+		,[Measures].[Reseller Sales Amount]
+	)
+	,20
+	,[Measures].[Reseller Sales Amount]
+)
+
+set [B - 50%] AS 
+{
+	TopPercent(
+		NONEMPTY(
+			[Product].[Products].[Product].Members
+			,[Measures].[Reseller Sales Amount]
+		)
+		,30
+		,[Measures].[Reseller Sales Amount]
+	) - [A - 20%]
+}
+
+set [C - 30%] AS
+{
+	NONEMPTY(
+		[Product].[Products].[Product].Members 
+		,[Measures].[Reseller Sales Amount]
+	)
+	- [A - 20%] 
+	- [B - 50%]
+}
+
+member [ABC Class] as
+IIF(
+	ISEMPTY([Measures].[Reseller Sales Amount]) 
+	OR Product.Products.CURRENTMEMBER.Properties("Name") = "All", 
+	NULL,
+	IIF(
+		COUNT(INTERSECT([A - 20%], Product.Products.CURRENTMEMBER)) > 0, 'A - 20%',
+		IIF(
+			COUNT(INTERSECT([B - 50%], Product.Products.CURRENTMEMBER)) > 0, 'B - 50%',
+			'C - 30%'
+		)
+	)
+)
+SELECT
+	{
+		[Measures].[Reseller Sales Amount],
+		[ABC Class]
+	} on 0,
+	non empty {
+		Order(
+			{
+				[Product].[Products].[All], 
+				[Product].[Products].[Product].Members
+			}
+			,[Measures].[Reseller Sales Amount]
+			,BDESC
+		)
+	} on 1	
+FROM ResellerSales

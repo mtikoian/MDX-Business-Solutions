@@ -1,0 +1,49 @@
+/* SAMPLE OUTPUT
+						Internet Sales Amount	Parent Name			Parent Internet Sales Amount	% of Parent
+Accessories				$700,759.96				All					$29,358,677.22					2.39%
+Bike Racks				$39,360.00				Accessories			$700,759.96						5.62%
+Hitch Rack - 4-Bike		$39,360.00				Bike Racks			$39,360.00						100.00%
+Bike Stands				$39,591.00				Accessories			$700,759.96						5.65%
+All-Purpose Bike Stand	$39,591.00				Bike Stands			$39,591.00						100.00%
+Bottles and Cages		$56,798.19				Accessories			$700,759.96						8.11%
+Mountain Bottle Cage	$20,229.75				Bottles and Cages	$56,798.19						35.62%
+Road Bottle Cage		$15,390.88				Bottles and Cages	$56,798.19						27.10%
+*/
+
+//Calculate how each product contributes to its respective subcategory and category
+with
+member [Parent Name] as
+	[Product].[Products].CURRENTMEMBER.PARENT.NAME
+
+member [Parent Internet Sales Amount] as
+	(
+		[Product].[Products].CURRENTMEMBER.PARENT,
+		[Internet Sales Amount]
+	), format_string="Currency"
+
+member [% of Parent] as
+	DIVIDE(
+		IIF(
+			([Measures].[Internet Sales Amount], [Product].[Products].CURRENTMEMBER) = 0
+			,0
+			,([Measures].[Internet Sales Amount], [Product].[Products].CURRENTMEMBER)
+		)
+		,[Measures].[Parent Internet Sales Amount]
+		,"N/A"
+	)
+	, format_string="Percent"
+
+SELECT
+	{
+		[Measures].[Internet Sales Amount],
+		[Measures].[Parent Name],
+		[Measures].[Parent Internet Sales Amount],
+		[Measures].[% of Parent]
+	} on 0,
+	{
+		FILTER(
+			 [Product].[Products].Members
+			 , [Measures].[% of Parent] <> "N/A"
+		 )
+	} on 1
+FROM ResellerSales

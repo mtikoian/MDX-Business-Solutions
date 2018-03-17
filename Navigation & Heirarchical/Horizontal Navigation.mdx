@@ -1,0 +1,46 @@
+/* SAMPLE OUTPUT
+			Internet Sales Amount	Prior Period Internet Sales Amount	Current-Prior Period Delta	Current-Prior Period Delta %	2-mo Prior Period Internet Sales Amount
+2005 Jul	$473,388.16				(null)								$473,388.16					(null)							(null)
+2005 Aug	$506,191.69				$473,388.16							$32,803.53					6.93%							(null)
+2005 Sep	$473,943.03				$506,191.69							-$32,248.66					-6.37%							$473,388.16
+2005 Oct	$513,329.47				$473,943.03							$39,386.44					8.31%							$506,191.69
+*/
+
+//Comparing Current Sales with last two months - horizontal navigation
+with 
+member [Prior Period Internet Sales Amount] as
+	(
+		[Order Date].[Calendar].CURRENTMEMBER.PREVMEMBER,
+		 [Measures].[Internet Sales Amount]
+	), format_string="$#,###.00"
+
+member [Current-Prior Period Delta] AS
+	[Measures].[Internet Sales Amount] - [Prior Period Internet Sales Amount]
+	,format_string="$#,###.00"
+
+member [Current-Prior Period Delta %] AS
+	IIF([Prior Period Internet Sales Amount] = 0
+		,NULL
+		,([Measures].[Internet Sales Amount] - [Prior Period Internet Sales Amount])/[Prior Period Internet Sales Amount]
+	)
+	,format_string="Percent"
+
+member [2-mo Prior Period Internet Sales Amount] as
+	(
+		[Order Date].[Calendar].CURRENTMEMBER.LAG(2),
+		 [Measures].[Internet Sales Amount]
+	), format_string="$#,###.00"
+SELECT 
+	{
+		[Measures].[Internet Sales Amount],
+		[Prior Period Internet Sales Amount],
+		[Current-Prior Period Delta],
+		[Current-Prior Period Delta %],
+		[2-mo Prior Period Internet Sales Amount] 
+	} on 0,
+	{
+		[Order Date].[Calendar].[Month].Members
+	} on 1
+from ResellerSales
+where ([Order Date].[Month].[Month].&[2005]&[7] : [Order Date].[Month].[Month].&[2006]&[7])
+

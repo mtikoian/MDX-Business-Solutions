@@ -1,0 +1,55 @@
+/* SAMPLE OUTPUT
+						Reseller Sales Amount	Parent Type	Parent Name			Pct of Parent	Pct of Total
+Accessories				$571,297.93				(All)		All					0.71%			0.71%
+Bike Racks				$197,736.16				Category	Accessories			34.61%			0.25%
+Hitch Rack - 4-Bike		$197,736.16				Subcategory	Bike Racks			100.00%			0.25%
+Bottles and Cages		$7,476.60				Category	Accessories			1.31%			0.01%
+Water Bottle - 30 oz.	$7,476.60				Subcategory	Bottles and Cages	100.00%			0.01%
+Cleaners				$11,188.37				Category	Accessories			1.96%			0.01%
+Bike Wash - Dissolver	$11,188.37				Subcategory	Cleaners			100.00%			0.01%
+Helmets					$258,712.93				Category	Accessories			45.29%			0.32%
+*/
+			
+//Products, subcategories and categories with their contribution to parent and total
+WITH
+MEMBER [Pct of Total] AS 
+	DIVIDE(
+		[Reseller Sales Amount]
+		,([Reseller Sales Amount], [Product].[Products].[All] )
+		,"N/A"
+	), format_string="Percent"
+
+Member [Pct of Parent] As
+	DIVIDE(
+		[Reseller Sales Amount]
+		,([Reseller Sales Amount], [Product].[Products].CURRENTMEMBER.PARENT)
+		,"N/A"
+	), format_string = "Percent"
+
+Member [Parent Type] As
+	[Product].[Products].CURRENTMEMBER.PARENT.LEVEL.NAME
+
+Member [Parent Name] AS
+	[Product].[Products].CURRENTMEMBER.PARENT.NAME
+
+SELECT 
+	{		
+		[Measures].[Reseller Sales Amount],		
+		[Measures].[Parent Type],
+		[Measures].[Parent Name],
+		[Measures].[Pct of Parent],
+		[Measures].[Pct of Total]
+	} on 0,
+	non empty {
+		FILTER(
+			HIERARCHIZE(
+				DESCENDANTS(
+					[Product].[Products].[Category].Members,
+					[Product].[Products].[Product],
+					SELF_AND_BEFORE
+				)
+			)
+		,[Reseller Sales Amount] <> 0
+		)
+	} on 1
+FROM ResellerSales

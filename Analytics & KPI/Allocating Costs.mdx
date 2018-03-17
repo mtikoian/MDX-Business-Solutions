@@ -1,0 +1,82 @@
+/* SAMPLE OUTPUT
+					Reseller		Reseller		Allocated		Reseller	Allocated		Unweighted 
+					Freight Cost	Sales Amount	Freight by		Order 		Freight by 		Allocated 
+													Sales			Quantity	Quantity		Freight by Sales
+France				$115,188.51		$4,607,537.93	$115,188.51		14,348		$134,611.03		$335,210.99
+Germany				$49,599.74		$1,983,988.04	$49,599.73		7,380		$69,238.18		$335,210.99
+United Kingdom		$106,975.28		$4,279,008.83	$106,975.27		13,193		$123,774.97		$335,210.99
+Canada				$359,448.31		$14,377,925.60	$359,448.32		41,761		$391,796.15		$335,210.99
+United States		$1,340,195.66	$53,607,801.21	$1,340,195.69	132,748		$1,245,424.10	$335,210.99
+Australia			$39,858.42		$1,594,335.38	$39,858.40		4,948		$46,421.48		$335,210.99
+
+	Weighted and unweighted allocation of freight costs by reseller sales amount + order quanitity
+	for different countries
+*/
+
+WITH
+
+MEMBER [Global Freight Cost] AS
+(
+	[Measures].[Reseller Freight Cost],
+	[Sales Territory].[Territories].[All]
+)
+
+MEMBER [Global Reseller Sales Cost] AS
+(
+	[Measures].[Reseller Sales Amount],
+	[Sales Territory].[Territories].[All]
+)
+
+MEMBER [Allocated Freight by Sales] AS
+	[Global Freight Cost] * 
+	DIVIDE(
+		[Measures].[Reseller Sales Amount]
+		,[Measures].[Global Reseller Sales Cost]
+		,"N/A"
+	)
+MEMBER [Allocated Freight by Quantity] AS
+	[Global Freight Cost] *
+	DIVIDE(
+		[Measures].[Reseller Order Quantity]
+		,(
+			[Measures].[Reseller Order Quantity],
+			[Sales Territory].[Territories].[All]
+		)
+		,"N/A"
+	)
+MEMBER [Allocation Multiplier] AS
+	1.0 /
+	COUNT(
+		FILTER(
+			DESCENDANTS(
+				ANCESTOR(
+					[Sales Territory].[Country].CURRENTMEMBER, 
+					[Sales Territory].[Country].[All]
+				),
+				[Sales Territory].[Country].CURRENTMEMBER.LEVEL,
+				SELF
+			)
+		,[Measures].[Reseller Sales Amount] > 0 
+		
+		)
+	)
+member [Measures].[Unweighted Allocated Freight by Sales] AS
+	[Allocation Multiplier] * [Measures].[Global Freight Cost]
+	
+SELECT
+	{		
+		[Measures].[Reseller Freight Cost],
+		[Measures].[Reseller Sales Amount],
+		[Measures].[Allocated Freight by Sales],
+		[Measures].[Reseller Order Quantity],
+		[Measures].[Allocated Freight by Quantity],
+		[Measures].[Unweighted Allocated Freight by Sales]
+	} on 0,
+	{
+		Filter(
+			[Sales Territory].[Territories].[Country].Members
+			,[Measures].[Reseller Sales Amount] <> 0
+		)
+	} on 1
+FROM ResellerSales
+
