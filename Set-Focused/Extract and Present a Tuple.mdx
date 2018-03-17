@@ -1,0 +1,34 @@
+/* SAMPLE OUTPUT
+			Sales Amount	Top Product Sales	Top Product
+2005 Jul	$489,328.58		$46,574.86			Mountain-100 Black, 44
+2005 Aug	$1,538,408.31	$153,899.54			Mountain-100 Black, 42
+2005 Sep	$1,165,897.08	$108,176.53			Mountain-100 Black, 44
+2005 Oct	$844,721.00		$64,799.81			Mountain-100 Black, 38
+2005 Nov	$2,324,135.80	$187,679.45			Mountain-100 Silver, 42
+2005 Dec	$1,702,944.54	$133,649.60			Mountain-100 Black, 42
+*/
+
+with
+member [Top Product Sales] as
+	{
+	topcount(
+		[Product].[Products].[Product].Members
+		,5
+		,[Measures].[Sales Amount]
+	)
+	* [Measures].[Sales Amount]	
+	}.Item(0)
+	,Format_string = "Currency"
+
+member [Top Product] as	
+	topcount(
+		[Product].[Products].[Product].Members
+		,5
+		,[Measures].[Sales Amount]
+	).Item(0).Name	
+
+select
+	{[Measures].[Sales Amount], [Top Product Sales], [Top Product]} on 0
+	,nonempty([Order Date].[Month].[Month].Members) on 1	
+from ResellerSales
+

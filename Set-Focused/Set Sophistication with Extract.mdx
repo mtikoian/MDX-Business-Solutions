@@ -1,0 +1,27 @@
+/* SAMPLE OUTPUT
+				Internet Sales Amount
+Australia		$9,061,000.58
+Germany			$2,894,312.34
+United Kingdom	$3,391,712.21
+United States	$9,389,789.51
+*/
+
+SELECT
+	[Measures].[Internet Sales Amount] on 0,	
+	EXTRACT(
+		FILTER(
+			[Sales Territory].[Country].[Country].Members *
+			[Order Date].[Month].[Month].Members
+			, [Measures].[Internet Sales Amount] > 200000
+		),
+	[Sales Territory].[Country]
+	)
+	on 1
+from ResellerSales
+go
+
+// For validation
+SELECT
+	[Measures].[Internet Sales Amount] on 0,
+	[Sales Territory].[Country].[Country].Members on 1
+FROM ResellerSales

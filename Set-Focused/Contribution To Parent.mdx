@@ -1,3 +1,14 @@
+/* SAMPLE OUTPUT
+							Parent		Sales Amount	Pct of Parent
+All							N/A			$80,450,596.98	N/A
+Accessories					All			$571,297.93		N/A
+Bike Racks					Accessories	$197,736.16		34.61%
+Hitch Rack - 4-Bike	Bike	Racks		$197,736.16		100.00%
+Bike Stands					Accessories	(null)			(null)
+All-Purpose Bike Stand		Bike Stands	(null)			(null)
+
+*/
+
 with 
 member [Measures].[Parent] as
 	iif(

@@ -1,0 +1,30 @@
+/* SAMPLE OUTPUT
+				Internet Order Quantity		Reseller Order Quantity
+Bike Racks							328						2,838
+Bottles and Cages					7981					2,571
+Cleaners							908						2,411
+Helmets								6440					13,101
+Hydration Packs						733						2,028
+Tires and Tubes						17332					674
+Mountain Bikes						4970					23,351
+Road Bikes							8068					39,080
+Touring Bikes						2167					12,584
+*/
+
+SELECT
+	{[Measures].[Internet Order Quantity]
+	,[Measures].[Reseller Order Quantity]}
+	ON 0,
+	FILTER(
+		[Product].[Products].[Subcategory].MEMBERS,
+		[Measures].[Internet Order Quantity] > 0
+		AND
+		[Measures].[Reseller Order Quantity] > 0
+		AND (
+			[Product].[Category].CURRENTMEMBER IS [Product].[Category].&[Bikes]
+			OR
+			[Product].[Category].CURRENTMEMBER IS [Product].[Category].&[Accessories]
+		)
+	)
+	ON 1
+FROM ResellerSales

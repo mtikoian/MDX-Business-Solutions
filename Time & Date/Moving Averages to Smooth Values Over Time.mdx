@@ -1,0 +1,32 @@
+/* SAMPLE OUTPUT			
+			Reseller Sales Amount	6-mo Rolling Avg
+2005 Jul	$489,328.58				$489,328.58
+2005 Aug	$1,538,408.31			$1,013,868.45
+2005 Sep	$1,165,897.08			$1,064,544.66
+2005 Oct	$844,721.00				$1,009,588.74
+2005 Nov	$2,324,135.80			$1,272,498.15
+2005 Dec	$1,702,944.54			$1,344,239.22
+2006 Jan	$713,116.69				$1,381,537.24
+2006 Feb	$1,900,788.93			$1,441,934.01
+*/
+
+//Calculate 6 month rolling average of Reseller Sales Amount
+WITH
+MEMBER [6-mo Rolling Avg] AS
+	AVG( 
+		LASTPERIODS(
+			6
+			,[Order Date].[Calendar].CURRENTMEMBER
+		),
+		[Measures].[Reseller Sales Amount]
+	)
+
+SELECT
+	{
+		[Measures].[Reseller Sales Amount],
+		[Measures].[6-mo Rolling Avg]
+	} on 0,
+	non empty [Order date].[Calendar].[Month].Members
+	on 1
+
+FROM ResellerSales

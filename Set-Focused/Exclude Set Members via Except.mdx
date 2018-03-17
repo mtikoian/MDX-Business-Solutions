@@ -1,0 +1,30 @@
+/* SAMPLE OUTPUT
+					Reseller Sales Amount
+Bike Racks			$197,736.16
+Bottles and Cages	$7,476.60
+Bottom Brackets		$51,826.37
+Brakes				$66,018.71
+Caps				$31,541.35
+Chains				$9,377.71
+
+*/
+
+SELECT
+	[Reseller Sales Amount] on 0,
+	EXCEPT (
+		[Product].[Subcategory].[Subcategory].Members,
+		{[Product].[Subcategory].&[Bib-Shorts],
+		[Product].[Subcategory].&[Bike Stands]}
+	)	
+	 on 1
+FROM ResellerSales
+go
+
+SELECT
+	[Reseller Sales Amount] on 0,	
+	[Product].[Subcategory].[All].Children
+	 on 1
+FROM ResellerSales
+WHERE (-{[Product].[Products].&[Bib-Shorts],
+		[Product].[Products].&[Bike Stands]})
+		

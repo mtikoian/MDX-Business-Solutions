@@ -1,0 +1,17 @@
+with
+set [Top Ten Products] as
+	topcount(
+		[Product].[Products].[Product].Members
+		,5
+		,[Measures].[Sales Amount]
+	)
+member [Product].[Products].[All].[Other Products] as	
+	aggregate( -[Top Ten Products])
+	
+select
+	[Measures].[Sales Amount] on 0,
+	{[Top Ten Products], 
+	[Product].[Products].[All].[Other Products],
+	[Product].[Products].[All]}
+	 on 1	
+from ResellerSales

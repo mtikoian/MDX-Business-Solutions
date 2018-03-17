@@ -1,0 +1,36 @@
+/* SAMPLE OUTPUT
+			Internet Sales Amount	Current Date Label		Current Date Value	Current Date Value Template					Current Date Value - Selected
+2006-03-17	$25,732.97				Mar 17, 2018			20180317			[Order Date].[Calendar].[Date].&[20060317]	20060317
+*/
+
+//Get Sales Amount for Current Date (2012)
+
+WITH
+MEMBER [Current Date Label] AS 
+	FORMAT(NOW(),"MMM dd, yyyy")
+
+MEMBER [Current Date Value] AS 
+	FORMAT(NOW(),"yyyyMMdd")
+
+MEMBER [Current Date Value - Selected] AS
+	'2006' + RIGHT([Current Date Value],4)
+
+MEMBER [Current Date Value Template] AS
+	'[Order Date].[Calendar].[Date].&[' + [Current Date Value - Selected] + ']'
+
+SET [Current Date Set] AS
+	STRTOMEMBER([Current Date Value Template], constrained)
+
+SELECT
+	{
+		[Measures].[Internet Sales Amount],
+		[Measures].[Current Date Label],
+		[Measures].[Current Date Value],
+		[Measures].[Current Date Value Template],
+		[Measures].[Current Date Value - Selected]
+	} on 0,
+	{
+		[Current Date Set]
+	} on 1
+from ResellerSales
+

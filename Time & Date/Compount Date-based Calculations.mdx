@@ -1,0 +1,58 @@
+/* SAMPLE OUTPUT
+			Reseller Sales Amount	YTD Reseller Sales Amount	PY YTD Reseller Sales Amount
+06 Q4		$7,041,183.75			$24,144,429.65				$8,065,435.31
+2006 Oct	$1,802,154.21			$18,905,400.11				$4,038,354.97
+2006 Nov	$3,053,816.33			$21,959,216.44				$6,362,490.76
+2006 Dec	$2,185,213.21			$24,144,429.65				$8,065,435.31
+2007		$32,202,669.43			$32,202,669.43				$24,144,429.65
+07 Q1		$5,266,343.51			$5,266,343.51				$4,069,186.04
+2007 Jan	$1,317,541.83			$1,317,541.83				$713,116.69
+2007 Feb	$2,384,846.59			$3,702,388.42				$2,613,905.62
+2007 Mar	$1,563,955.08			$5,266,343.51				$4,069,186.04
+07 Q2		$6,733,903.82			$12,000,247.33				$8,223,006.46
+2007 Apr	$1,865,278.43			$7,131,621.94				$4,952,085.98
+2007 May	$2,880,752.68			$10,012,374.62				$7,221,202.69
+2007 Jun	$1,987,872.71			$12,000,247.33				$8,223,006.46
+07 Q3		$10,926,196.09			$22,926,443.41				$17,103,245.90
+2007 Jul	$2,665,650.54			$14,665,897.87				$10,616,695.99
+2007 Aug	$4,212,971.51			$18,878,869.38				$14,217,886.70
+2007 Sep	$4,047,574.04			$22,926,443.41				$17,103,245.90
+07 Q4		$9,276,226.01			$32,202,669.43				$24,144,429.65
+*/
+
+//Calculate YTD and Prior Year YTD
+with
+//YTD
+member [YTD Reseller Sales Amount] as
+AGGREGATE(
+	PERIODSTODATE(
+		[Order Date].[Calendar].[Year],
+		[Order Date].[Calendar].CURRENTMEMBER
+	)
+	,[Measures].[Reseller Sales Amount]
+)
+//Prior Year YTD
+member [PY YTD Reseller Sales Amount] as
+(
+	PARALLELPERIOD(	
+		[Order Date].[Calendar].[Year],
+		1,
+		[Order Date].[Calendar].CURRENTMEMBER
+	) , [Measures].[YTD Reseller Sales Amount]
+), format_string  = "Currency"
+
+select 
+	{
+		[Measures].[Reseller Sales Amount],
+		[Measures].[YTD Reseller Sales Amount],
+		[Measures].[PY YTD Reseller Sales Amount]
+	}
+	on 0,
+	non empty descendants(
+		[Order Date].[Calendar].[Year].Members
+		,[Order Date].[Calendar].[Month]
+		,SELF_AND_BEFORE
+	)
+	on 1
+from ResellerSales
+go

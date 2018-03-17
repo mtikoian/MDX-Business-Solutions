@@ -1,0 +1,43 @@
+/* SAMPLE OUTPUT 
+								Reseller Sales Amount
+France	Mountain-200 Black, 38	$168,480.72
+France	Road-350-W Yellow, 48	$150,187.38
+France	Touring-1000 Blue, 46	$137,199.18
+France	Touring-1000 Blue, 60	$126,405.30
+France	Touring-1000 Yellow, 60	$126,194.55
+Germany	Touring-1000 Blue, 60	$154,636.50
+Germany	Touring-1000 Yellow, 60	$150,130.61
+Germany	Touring-1000 Yellow, 46	$132,172.84
+Germany	Touring-1000 Blue, 46	$125,050.19
+Germany	Touring-1000 Blue, 50	$78,674.31
+*/
+
+//Top 5 Products from Each Country for Reseller Sales Amount
+SELECT
+	[Measures].[Reseller Sales Amount] on 0,
+	NON EMPTY
+	GENERATE(		
+		[Sales Territory].[Territories].[Country].Members,
+		[Sales Territory].[Territories].CURRENTMEMBER *
+		TOPCOUNT(
+			EXISTING
+			[Product].[Products].[Product].Members
+			,5
+			,[Measures].[Reseller Sales Amount]
+		)
+	)
+	on 1
+FROM ResellerSales
+go
+
+//Validation
+SELECT
+	[Measures].[Reseller Sales Amount] on 0,		
+	TOPCOUNT(
+		[Product].[Products].[Product].Members
+		,5
+		,[Measures].[Reseller Sales Amount]
+	)
+	on 1
+FROM ResellerSales
+WHERE [Sales Territory].[Territories].[Country].&[Germany]

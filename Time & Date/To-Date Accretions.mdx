@@ -1,0 +1,74 @@
+/* SAMPLE OUTPUT
+			Reseller Sales Amount	YTD Reseller Sales Amount	QTD Reseller Sales Amount
+2005		$8,065,435.31			$8,065,435.31				(null)
+05 Q3		$3,193,633.97			$3,193,633.97				$3,193,633.97
+2005 Jul	$489,328.58				$489,328.58					$489,328.58
+2005 Aug	$1,538,408.31			$2,027,736.89				$2,027,736.89
+2005 Sep	$1,165,897.08			$3,193,633.97				$3,193,633.97
+05 Q4		$4,871,801.34			$8,065,435.31				$4,871,801.34
+2005 Oct	$844,721.00				$4,038,354.97				$844,721.00
+2005 Nov	$2,324,135.80			$6,362,490.76				$3,168,856.79
+2005 Dec	$1,702,944.54			$8,065,435.31				$4,871,801.34
+*/
+
+//Calculating YTD and QTD w/ full date heirarchy for validation of accuracy & completeness
+with
+//YTD
+member [YTD Reseller Sales Amount] as
+aggregate(
+	periodstodate(
+		[Order Date].[Calendar].[Year],
+		[Order Date].[Calendar].CurrentMember
+	), [Measures].[Reseller Sales Amount] 
+)
+//QTD
+member [QTD Reseller Sales Amount] as 
+aggregate(
+	periodstodate(
+		[Order Date].[Calendar].[Quarter],
+		[Order Date].[Calendar].CurrentMember
+	), [Measures].[Reseller Sales Amount] 
+)
+SELECT
+	{
+		[Measures].[Reseller Sales Amount]
+		,[Measures].[YTD Reseller Sales Amount]
+		,[Measures].[QTD Reseller Sales Amount]
+	} on 0,
+	non empty Descendants(
+		[Order Date].[Calendar].[Year].Members
+		,2
+		,SELF_AND_BEFORE
+	) on 1
+FROM ResellerSales
+go
+
+//Same query as above with shortcut date methods
+with 
+//YTD
+member [YTD Reseller Sales Amount] as
+aggregate (
+	YTD([Order Date].[Calendar].CURRENTMEMBER),
+	[Measures].[Reseller Sales Amount]
+)
+//QTD
+member [QTD Reseller Sales Amount] as
+aggregate (
+	QTD([Order Date].[Calendar].CURRENTMEMBER),
+	[Measures].[Reseller Sales Amount]
+)
+
+SELECT 	
+	{
+		[Measures].[Reseller Sales Amount],
+		[Measures].[YTD Reseller Sales Amount],
+		[Measures].[QTD Reseller Sales Amount]
+	}
+	on 0,
+	non empty DESCENDANTS(
+		[Order Date].[Calendar].[Year].Members,
+		[Order Date].[Calendar].[Month],
+		SELF_AND_BEFORE
+	)
+	on 1
+FROM ResellerSales
