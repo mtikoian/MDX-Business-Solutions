@@ -1,0 +1,45 @@
+/* SAMPLE OUTPUT
+													Reseller Sales Amount
+Retail Mall					2006 Road-250 Black, 44	$20,115.75
+Retail Mall					2006 Road-250 Red, 44	$17,592.12
+Retail Mall					2006 Road-150 Red, 56	$15,028.73
+Retail Mall					2006 Road-250 Red, 52	$14,660.10
+Farthermost Bike Shop		2006 Road-250 Red, 44	$21,990.15
+Farthermost Bike Shop		2006 Road-150 Red, 52	$21,469.62
+Farthermost Bike Shop		2006 Road-150 Red, 56	$17,175.70
+Farthermost Bike Shop		2006 Road-250 Black, 58	$17,016.19
+Excellent Riding Supplies	2006 Road-250 Black, 52	$19,634.06
+...
+*/
+
+//Top 5 Resellers and their top 20% products in terms of sales amount
+
+with
+set [Top 5 Resellers] as
+	TOPCOUNT(
+		(
+			[Reseller].[Resellers].[Reseller].Members, 
+			[Order Date].[Calendar].&[2006]
+		) 
+		,5
+		,[Measures].[Reseller Sales Amount]
+	)
+
+set [Top 20% Products in Top 5 Resellers] as
+	GENERATE(
+		[Top 5 Resellers],
+		TOPPERCENT(
+			([Top 5 Resellers].CURRENTMEMBER, [Product].[Products].[Product].Members),
+			20,
+			[Measures].[Reseller Sales Amount]
+		)
+	)
+
+select
+	{
+		[Measures].[Reseller Sales Amount]
+	} on 0,
+	{
+		[Top 20% Products in Top 5 Resellers]
+	} on 1
+from ResellerSales
